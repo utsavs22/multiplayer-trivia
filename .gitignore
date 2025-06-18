@@ -1,0 +1,19 @@
+# Vite (React)
+/dist              # Vite's build output
+/node_modules      # NPM/Yarn dependencies
+.env               # Environment variables
+.env.local         
+.DS_Store          # Mac OS metadata
+*.log              # Log files
+
+# Node.js (Backend)
+/backend/node_modules
+/server/.env          # Backend env files
+
+# IDE & Editor
+.vscode/
+.idea/
+
+# Temp/cache files
+.temp/
+.cache/
