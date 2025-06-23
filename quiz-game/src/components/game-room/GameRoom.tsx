@@ -10,7 +10,9 @@ function GameRoom() {
     const location = useLocation();
     const {nickName} = location.state as {nickName: string};
     const [players, setPlayers] = useState<string[]>([]);
-
+    
+    const isHost = players[0]== nickName ;
+    
     useEffect(() => {
       if (roomCode && nickName) {
         socket.emit('join-room', {roomCode, nickName});
@@ -24,7 +26,21 @@ function GameRoom() {
         socket.off('room-update');
       };
     }, [roomCode, nickName]);
+
+    useEffect(() => {
+      socket.on('game-started', () => {
+        alert('game started');
+      });
     
+      return () => {
+        socket.off('game-started');
+      }
+    }, [])
+    
+    
+    const handleStartGame = () => {
+      socket.emit('start-game', {roomCode})
+    };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 px-4 text-white">
@@ -40,6 +56,15 @@ function GameRoom() {
             </li>
           ))}
         </ul>
+
+        {isHost && (
+          <button
+            onClick={handleStartGame}
+            className="mt-6 w-full py-3 text-lg font-semibold bg-green-500 hover:bg-green-600 rounded-xl transition-all"
+          >
+            Start Game
+          </button>
+        )}
       </div>
 
       <p className="mt-8 text-sm text-white/60">Waiting for game to start...</p>
