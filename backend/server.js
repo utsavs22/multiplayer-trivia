@@ -16,6 +16,7 @@ const io = new Server(server, {
 });
 
 const rooms = {}
+const roomStates = {}
 
 io.on('connection', (socket) => {
     // console.log('New Client connected:',socket.id);
@@ -60,8 +61,43 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on('start-game', ({roomCode}) => {
-        io.to(roomCode).emit('game-started')
+
+    socket.on('start-game', ({ roomCode }) => {
+        setTimeout(() => {
+            io.to(roomCode).emit('game-started')
+            const question = {
+                question: 'What is the capital of France?',
+                options: ['Paris', 'London', 'Berlin', 'Madrid'],
+                correctAnswer: 'Paris'
+            };
+            console.log(`Sending question to room ${roomCode}:`, question);
+            io.to(roomCode).emit('next-question', question);
+        }, 500);
+    })
+
+    socket.on('submit-game',({roomCode, nickName, answer, timeTaken}) => {
+        if(!roomStates[roomCode]) {
+            roomStates[roomCode] = {answers:[]};
+        }
+
+        roomStates[roomCode].answers.push({nickName, answer, timeTaken});
+
+        const totalPlayers = rooms[roomCode]?.length || 0;
+
+        if(roomStates[roomCode].answers.length === totalPlayers) {
+            const submittedAnswers = roomStates[roomCode].answers;
+
+            const correctAnswer = 'Paris';
+            const scores = submittedAnswers.map((entry) => ({
+                nickName: entry.nickName,
+                correct: entry.answer === correctAnswer,
+                timeTaken: entry.timeTaken
+            }));
+
+            io.to(roomCode).emit('show-results', scores);
+
+            roomStates[roomCode].answers = []
+        }
     })
 });
 

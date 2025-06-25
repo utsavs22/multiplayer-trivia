@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
-import { io } from 'socket.io-client';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import socket from '../../socket';
 
-const socket = io('http://localhost:3000');
 
 function GameRoom() {
-
-    const {roomCode} = useParams();
-    const location = useLocation();
-    const {nickName} = location.state as {nickName: string};
-    const [players, setPlayers] = useState<string[]>([]);
+  
+  const navigate = useNavigate();
+  const {roomCode} = useParams();
+  const location = useLocation();
+  const {nickName} = location.state as {nickName: string};
+  const [players, setPlayers] = useState<string[]>([]);
     
     const isHost = players[0]== nickName ;
     
@@ -29,7 +29,7 @@ function GameRoom() {
 
     useEffect(() => {
       socket.on('game-started', () => {
-        alert('game started');
+        navigate(`/quiz/${roomCode}`, {state:{nickName}});
       });
     
       return () => {
