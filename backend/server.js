@@ -96,6 +96,16 @@ io.on('connection', (socket) => {
 
             io.to(roomCode).emit('show-results', scores);
 
+            setTimeout(() => {
+                const nextQuestion = {
+                    question: 'What is 2 + 2?',
+                    options: ['3', '4', '5', '6'],
+                    correctAnswer: '4'
+                };
+                console.log(`Sending next question to room ${roomCode}:`, nextQuestion);
+                io.to(roomCode).emit('next-question', nextQuestion);
+            }, 5000);
+            
             roomStates[roomCode].answers = []
         }
     })

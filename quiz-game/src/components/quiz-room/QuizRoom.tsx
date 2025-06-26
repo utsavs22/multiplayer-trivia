@@ -8,8 +8,13 @@ interface Question {
     correctAnswer: string;
 }
 
-function QuizRoom() {
+interface Result {
+    nickName: string;
+    correct: boolean;
+    timeTaken: number;
+}
 
+function QuizRoom() {
     const { roomCode } = useParams();
     const location = useLocation();
     const { nickName } = location.state as { nickName: string };
@@ -20,21 +25,28 @@ function QuizRoom() {
     const [timeLeft, setTimeLeft] = useState(10);
     const [answerTime, setAnswerTime] = useState<number | null>(null);
 
+    const [results, setResults] = useState<Result[] | null>(null)
+
     useEffect(() => {
         console.log("Setting up socket listener for next-question");
         socket.on('next-question', (question: Question) => {
-            
             console.log(question);
-            
             setCurrentQuestion(question);
             setSelectedOption('');
             setSubmitted(false);
             setTimeLeft(10);
             setAnswerTime(null);
+            setResults(null);
         });
+
+        socket.on('show-results', (scores: Result[]) => {
+            console.log('Results received:', scores);
+            setResults(scores);
+        })
 
         return () => {
             socket.off('next-question');
+            socket.off('show-results');
         }
     }, [])
 
@@ -49,6 +61,23 @@ function QuizRoom() {
             }
         }
     }, [submitted, timeLeft])
+
+    // useEffect(() => {
+    //     socket.on('show-results', (scores: { nickName: string; correct: boolean; timeTaken: number }[]) => {
+    //         console.log('Results:', scores);
+    //         alert(
+    //             scores.map((s) => {
+    //                 `${s.nickName} — ${s.correct ? '✅ Correct' : '❌ Wrong'} — ${s.timeTaken}s`
+    //             })
+    //                 .join('\n')
+    //         );
+    //     })
+
+    //     return () => {
+    //         socket.off('show-results');
+    //     };
+    // }, [])
+
 
     const handleSubmit = () => {
         if (!selectedOption || !roomCode || submitted) return;
@@ -98,6 +127,20 @@ function QuizRoom() {
             )}
 
             {submitted && <p className="mt-4 text-white/70">Answer submitted in {answerTime}s. Waiting for others...</p>}
+
+            {results && (
+                <div className="mt-6 bg-white/10 p-4 rounded-xl w-full max-w-md text-center">
+                    <h3 className="text-xl mb-2 font-semibold">Results</h3>
+                    <ul className="space-y-2">
+                        {results.map((r, i) => (
+                            <li key={i} className={`py-2 rounded ${r.correct ? 'text-green-400' : 'text-red-400'}`}>
+                                {r.nickName}: {r.correct ? '✅ Correct' : '❌ Wrong'} — {r.timeTaken}s
+                            </li>
+                        ))}
+                    </ul>
+                    <p className="mt-3 text-sm text-white/50">Next question coming soon...</p>
+                </div>
+            )}
         </div>
     )
 }
